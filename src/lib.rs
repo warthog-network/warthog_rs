@@ -48,11 +48,9 @@ impl Wallet {
         return hex::encode(addr);
     }
 
-
-
-
-
-
+    pub fn sign() {
+        todo!("Implement signing of transaction");
+    }
 }
 
 impl RPC {
@@ -64,17 +62,6 @@ impl RPC {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_wallet() {
-        let wallet = Wallet::new(None);
-        print!("Secret Key: {:?}\n", SecretKey::clone(&wallet.sk).display_secret() );
-        print!("Public Key: {:?}\n", wallet.pk);
-        print!("Address: {:?}\n", wallet.address);
-    }
+mod test;
 
 
-
-}
