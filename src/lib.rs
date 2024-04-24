@@ -31,7 +31,7 @@ pub struct Data {
     height: i64,
     is_janushash: bool,
     pinHash: String,
-    pinHeight: i64,
+    pinHeight: i32,
     synced: bool,
     worksum: f64,
     worksumHex: String,
@@ -49,8 +49,11 @@ pub struct Transaction {
 }
 
 impl Wallet {
-    pub fn new(sk: Option<String>) -> Wallet {
-        let secret_key = sk.map_or(Self::generate_sk(), |k| k.parse().unwrap());
+    pub fn new(sk : Option<String>) -> Wallet {
+        let secret_key = match sk {
+            Some(sk) => SecretKey::from_slice(&hex::decode(sk).unwrap()).unwrap(),
+            None => Self::generate_sk(),
+        };
         let pubkey = Self::generate_pk(secret_key);
         Wallet {
             sk: secret_key,
@@ -82,7 +85,7 @@ impl Wallet {
         return hex::encode(addr);
     }
 
-    pub fn sign_tx(&self, tx_data : Model, to: String, amount : u64, nonce_id: i32, fee_e8: u64) -> String {
+    pub fn sign_tx(&self, tx_data : Model, to: String, amount : u64, nonce_id: u32, fee_e8: u64) -> String {
         let pin_height = tx_data.data.pinHeight;
         let pin_hash = tx_data.data.pinHash;
 
@@ -97,29 +100,23 @@ impl Wallet {
         let to_addr_bytes = hex::decode(to).unwrap();
         to_sign.extend(&to_addr_bytes[0..20]);
         to_sign.extend(&amount.to_be_bytes());
-
-
-
         let sha = Sha256::digest(to_sign);
-        let wallet = Wallet::new(Some("dcf9b59a067663f2afacd80eec49af2e8f2aea09507b7f294e25638f35028cf5".to_string()));
-        let sk = wallet.sk;
+        let sk = self.sk;
 
         let secp = Secp256k1::new();
-        let msg = Message::from_digest_slice(&sha).unwrap();
-        // recoverable signature
+        let msg = Message::from_digest_slice(&*sha).expect("32 bytes");
         let sig = secp.sign_ecdsa_recoverable(&msg, &sk);
 
-        let (recid, sig_bytes) = sig.serialize_compact();
+        let (rec_id_value, sig_serialized) = sig.serialize_compact();
+        let rec_id = rec_id_value.to_i32();
 
-        let mut full_sig: Vec<u8> = Vec::new();
-        full_sig.extend_from_slice(&sig_bytes);
-        full_sig.push(recid.to_i32() as u8);
+        // Concatenate r, s and recovery id
+        let mut signature65 = vec![];
+        signature65.extend(&sig_serialized[..32]); // r
+        signature65.extend(&sig_serialized[32..]); // s
+        signature65.push(rec_id as u8); // recovery id
 
-        let signature = hex::encode(full_sig);
-
-        return signature;
-
-
+        hex::encode(signature65)
     }
 }
 
