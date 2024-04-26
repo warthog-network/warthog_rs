@@ -1,7 +1,8 @@
 #[cfg(test)]
 pub mod tests {
-    use secp256k1::{SecretKey};
-    use crate::{RPC, Transaction, Wallet};
+    use crate::rpc::{Transaction, RPC};
+    use crate::wallet::Wallet;
+    use secp256k1::SecretKey;
 
     #[test]
     fn test_wallet() {
@@ -16,7 +17,9 @@ pub mod tests {
 
     #[test]
     fn test_wallet_with_sk() {
-        let wallet = Wallet::new(Some("dcf9b59a067663f2afacd80eec49af2e8f2aea09507b7f294e25638f35028cf5".to_string()));
+        let wallet = Wallet::new(Some(
+            "dcf9b59a067663f2afacd80eec49af2e8f2aea09507b7f294e25638f35028cf5".to_string(),
+        ));
         println!("{:?}", wallet.address)
     }
 
@@ -36,7 +39,9 @@ pub mod tests {
         };
         let data = rpc.get_chain_head().unwrap();
         let pin_height = &data.data.pinHeight;
-        let wallet = Wallet::new(Some("dcf9b59a067663f2afacd80eec49af2e8f2aea09507b7f294e25638f35028cf5".to_string()));
+        let wallet = Wallet::new(Some(
+            "dcf9b59a067663f2afacd80eec49af2e8f2aea09507b7f294e25638f35028cf5".to_string(),
+        ));
         let nonce_id: i32 = 0;
         let to = "0000000000000000000000000000000000000000de47c9b2".to_string();
         let amount_e8 = 100000000;
